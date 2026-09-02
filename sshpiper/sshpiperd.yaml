@@ -1,0 +1,10 @@
+version: "1.0"
+pipes:
+  - from:
+  # 以node用户进行密钥访问
+      - username: "node"
+        authorized_keys: /etc/ssh/authorized_keys
+    to:
+    # 映射到 dsh-env 容器的端口，端口配置见 /etc/ssh/sshd_config
+      host: "dsh-env:2201"
+      private_key: /etc/ssh/ssh_host_ed25519_key

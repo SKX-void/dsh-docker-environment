@@ -1,0 +1,20 @@
+# 我的dsh没有开放端口，使用 openresty 做网关
+name: openresty-gateway
+services:
+  openresty:
+    image: openresty/openresty:latest
+    container_name: openresty-gateway
+    ports:
+      - 3081:3081
+    networks:
+      # 接入 dsh 网络
+      - dsh
+    volumes:
+      # 保持时间同步，我的 UTC+8
+      - /etc/localtime:/etc/localtime:ro
+      - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ./sites:/usr/local/openresty/nginx/conf/sites:ro
+      - ./ssl:/usr/local/openresty/nginx/ssl:ro
+networks:
+  dsh:
+    external: true

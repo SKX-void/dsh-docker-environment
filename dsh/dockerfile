@@ -1,0 +1,25 @@
+FROM node:26.8.1-bookworm-slim
+
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y \
+    # 标准工具组
+    git curl wget vim procps \
+    build-essential \
+    # python 工具组
+    python3 python3-pip python3-venv \
+    # dsh 安全策略要求一个沙箱才能运行bash：
+    bubblewrap \
+    # ssh 工具
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && test -f /usr/sbin/sshd
+
+RUN ln -s /usr/bin/python3 /usr/bin/python
+RUN npm install -g pnpm
+# 确保 ssh 服务目录存在
+RUN mkdir -p /run/sshd && \
+    chmod 0755 /run/sshd && \
+    chown root:root /run/sshd
+
+WORKDIR /app

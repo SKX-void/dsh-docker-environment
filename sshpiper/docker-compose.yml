@@ -1,0 +1,29 @@
+name: sshpiper-gateway
+services:
+  # 不映射 dsh-env ssh 端口，使用这个 ssh nat 进行管理
+  sshpiper:
+    image: farmer1992/sshpiperd:full
+    container_name: sshpiper-gateway
+    ports:
+      - "2222:2222"
+    networks:
+      - dsh
+    volumes:
+      # 挂载配置文件
+      - ./sshpiperd.yaml:/sshpiperd.yaml
+      # 需要你生成密钥对，公钥放在 x/HOME/.ssh/authorized_keys 这也是我 env 配置HOME挂载的原因之一
+      - ./ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key
+      # 公钥许可，其他机器将公钥放入其中
+      - ./authorized_keys:/etc/ssh/authorized_keys
+      # 似乎没用上？
+      - ./known_hosts:/etc/ssh/known_hosts
+    environment:
+      - PLUGIN=yaml # 通过环境变量指定插件
+      - SSHPIPERD_YAML_CONFIG=/sshpiperd.yaml # 通过环境变量指定配置文件
+      - SSHPIPERD_SERVER_KEY_GENERATE_MODE=notexist # 主机密钥生成模式
+      # - log-level=trace
+    # command 可以省略，或者保留为空
+    # command: []
+networks:
+  dsh:
+    external: true
