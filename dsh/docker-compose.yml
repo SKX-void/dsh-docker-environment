@@ -1,7 +1,7 @@
 name: deepseek-harness-env
 services:
   deepseek-harness:
-    image: dsh-env:0.1.0
+    image: dsh-env:0.2.0
     container_name: dsh-env
     working_dir: /app/deepseek-harness
     networks:
@@ -24,7 +24,8 @@ services:
       - ./workspace:/workspace
       # 挂载 ssh 配置
       - ./etc/ssh:/etc/ssh
-
+      # # 挂载反代配置
+      # - ./nginx.conf:/etc/nginx/nginx.conf
     stdin_open: true
     tty: true
     # 沙箱环境需要这两个才能启动，我没研究过，ai帮我写的，欢迎指点。
@@ -35,70 +36,14 @@ services:
     # 启动指令
     command: |
       sh -c "
-      # 以node用户启动ssh，这样可以在外部连接容器内的ssh
-        echo '>>> 启动SSH服务...' && /usr/sbin/sshd -D &
-        echo '>>> 等待2秒...' && sleep 2
-        echo \">>> 删除锁文件...\"
-        # 这个是我的插件问题，当dsh非正常终止时，若此文件存在则无法启动
+        mkdir -p /tmp/nginx/{body,proxy,fastcgi,uwsgi,scgi}
+        echo '>>> 启动 SSH 服务...' && /usr/sbin/sshd -D &
+        # echo '>>> 启动 Nginx...' && /usr/sbin/nginx -c /etc/nginx/nginx.conf -g 'daemon off;' &
+        echo '>>> 等待服务就绪...' && sleep 2
         rm -rf ~/.dsh/task-board/ledger-v2.lock
-        echo \">>> 启动web服务...\"
-        # 我安装了一个认证插件，用户名密码+可监听 0.0.0.0 用于docker以及认证
-        pnpm dsh web --host 0.0.0.0
+        echo '>>> 启动 Web 服务...'
+        pnpm dsh web
       "
-
-  # 当 dsh 因为插件加载等问题停止运行时， dsh-env 容器无法进入。
-  # docker exec -it dsh-fix /bin/bash #进入第二环境进行 pnpm dsh 来修复
-  bash-fix:
-    image: dsh-env:0.1.0
-    container_name: dsh-fix
-    working_dir: /app/deepseek-harness
-    networks:
-      - dsh
-    user: "${UID:-1000}:${GID:-1000}"
-    environment:
-      - HOME=/home/node
-      - http_proxy=http://172.11.0.1:7890
-      - https_proxy=http://172.11.0.1:7890
-      - no_proxy=localhost,127.0.0.1,.local,172.11.0.0/16,10.0.0.0/8
-    volumes:
-      - ./app:/app
-      - ./HOME:/home/node
-      - ./workspace:/workspace
-      - ./etc/ssh:/etc/ssh
-    stdin_open: true
-    tty: true
-    cap_add:
-      - SYS_ADMIN
-    security_opt:
-      - seccomp=./seccomp-bwrap.json
-    command: /bin/bash
-    restart: "no"
-
-  # headroom token整理服务，不过对 dsh 似乎效果不大
-  # headroom:
-  #   image: python:3.13.15-slim
-  #   container_name: dsh-headroom
-  #   networks:
-  #     - dsh
-  #   user: "${UID:-1000}:${GID:-1000}"
-  #   environment:
-  #     - HOME=/home/node
-  #     - HEADROOM_DETECT_BACKEND=python
-  #     - HEADROOM_TOOL_SEARCH=off
-  #   volumes:
-  #     - ./app:/app
-  #   command: |
-  #     sh -c "
-  #       mkdir -p /home/node/.headroom/logs &&
-  #       exec /app/python-venv/bin/headroom proxy --port 8787 --openai-api-url https://api.deepseek.com/v1 --host 0.0.0.0 --connect-timeout-seconds 15 --request-timeout-seconds 120 --log-file /home/node/.headroom/logs/deepseek-proxy.log
-  #     "
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-sf", "http://127.0.0.1:8787/livez"]
-  #     interval: 15s
-  #     timeout: 3s
-  #     retries: 5
-  #     start_period: 20s
 
 # 确保此网络已存在，我配置的代理还要求 172.11.0.0/16
 networks:

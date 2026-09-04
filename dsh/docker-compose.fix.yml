@@ -1,0 +1,35 @@
+name: deepseek-harness-env-fix
+services:
+  # 当 dsh 因为插件加载等问题停止运行时， dsh-env 容器无法进入。
+  # docker exec -it dsh-fix /bin/bash #进入第二环境进行 pnpm dsh 来修复
+  bash-fix:
+    image: dsh-env:0.2.0
+    container_name: dsh-fix
+    working_dir: /app
+    networks:
+      - dsh
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - HOME=/home/node
+      - http_proxy=http://172.11.0.1:7890
+      - https_proxy=http://172.11.0.1:7890
+      - no_proxy=localhost,127.0.0.1,.local,172.11.0.0/16,10.0.0.0/8
+    volumes:
+      - ./app:/app
+      - ./HOME:/home/node
+      - ./workspace:/workspace
+      - ./etc/ssh:/etc/ssh
+      # - ./nginx:/etc/nginx/conf.d
+    stdin_open: true
+    tty: true
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=./seccomp-bwrap.json
+    command: /bin/bash
+    restart: "no"
+
+# 确保此网络已存在，我配置的代理还要求 172.11.0.0/16
+networks:
+  dsh:
+    external: true

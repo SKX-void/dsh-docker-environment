@@ -14,7 +14,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ./sites:/usr/local/openresty/nginx/conf/sites:ro
-      - ./ssl:/usr/local/openresty/nginx/ssl:ro
+      # - ./ssl:/usr/local/openresty/nginx/ssl:ro
 networks:
   dsh:
     external: true

@@ -1,0 +1,32 @@
+name: deepseek-harness-env
+services:
+  # headroom token整理服务，不过对 dsh 似乎效果不大
+  headroom:
+    image: python:3.13.15-slim
+    container_name: dsh-headroom
+    networks:
+      - dsh
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - HOME=/home/node
+      - HEADROOM_DETECT_BACKEND=python
+      - HEADROOM_TOOL_SEARCH=off
+    volumes:
+      - ./app:/app
+    command: |
+      sh -c "
+        mkdir -p /home/node/.headroom/logs &&
+        exec /app/python-venv/bin/headroom proxy --port 8787 --openai-api-url https://api.deepseek.com/v1 --host 0.0.0.0 --connect-timeout-seconds 15 --request-timeout-seconds 120 --log-file /home/node/.headroom/logs/deepseek-proxy.log
+      "
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8787/livez"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+# 确保此网络已存在，我配置的代理还要求 172.11.0.0/16
+networks:
+  dsh:
+    external: true

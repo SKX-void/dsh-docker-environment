@@ -12,11 +12,15 @@ RUN --mount=type=cache,target=/var/cache/apt \
     bubblewrap \
     # ssh 工具
     openssh-server \
+    # nginx 服务
+    # nginx \
     && rm -rf /var/lib/apt/lists/* \
+    # && test -f /usr/sbin/nginx \
     && test -f /usr/sbin/sshd
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN npm install -g pnpm
+
 # 确保 ssh 服务目录存在
 RUN mkdir -p /run/sshd && \
     chmod 0755 /run/sshd && \
