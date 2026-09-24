@@ -3,7 +3,7 @@ docker buildx build --load --platform linux/amd64,linux/arm64 -t dsh-env:0.1.4 .
 
 docker buildx build --load --platform linux/arm64 -t dsh-env:0.1.4 .
 docker save -o dsh-env.tar dsh-env:0.1.4 -->
-
+docker pull --platform linux/arm64 forgejoclone/forgejo:16.0.3-rootless
 <!-- 配代理最头疼了 -->
 export HTTP_PROXY=http://127.0.0.1:7890
 export HTTPS_PROXY=http://127.0.0.1:7890
@@ -33,7 +33,7 @@ export NO_PROXY=localhost,172.cc.0.1
 
 git clone https://github.com/deepseek-ai/deepseek-harness.git
 cd deepseek-harness
-git checkout tags/dsh-v0.1.2-rc.1
+git checkout tags/dsh-v0.1.7-rc.1
 
 pnpm install
 pnpm run build
