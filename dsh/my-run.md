@@ -20,9 +20,9 @@ docker build \
 
 ```bash
 
-# export HTTP_PROXY=http://127.0.0.1:7890
-# export HTTPS_PROXY=http://127.0.0.1:7890
-# export NO_PROXY=localhost,127.0.0.1
+export HTTP_PROXY=http://127.0.0.1:7890
+export HTTPS_PROXY=http://127.0.0.1:7890
+export NO_PROXY=localhost,127.0.0.1
 
 docker compose -f docker-compose.fix.yml up -d
 docker exec -it dsh-fix bash
@@ -33,7 +33,7 @@ export NO_PROXY=localhost,172.11.0.1
 
 git clone https://github.com/deepseek-ai/deepseek-harness.git
 cd deepseek-harness
-git checkout tags/dsh-v0.1.5-rc.1
+git checkout tags/dsh-v0.1.5-rc.3
 
 pnpm install
 pnpm run build
@@ -49,7 +49,7 @@ export HTTPS_PROXY=http://172.11.0.1:7890
 export NO_PROXY=localhost,172.11.0.1
 
 cd /app
-git clone https://github.com/zhu1090093659/dsh-web.git
+git clone --filter=blob:none https://github.com/zhu1090093659/dsh-web.git
 cd dsh-web
 git checkout tags/v0.3.24
 # 2. 安装依赖并构建
@@ -60,6 +60,17 @@ node scripts/link-profile.mjs
 
 cd /app/deepseek-harness
 pnpm dsh plugin --profile web add link:/app/dsh-web/packages/dsh-web-all
+
+
+cd /app
+git clone https://github.com/Tyan66666/billion-context-dsh.git
+cd billion-context-dsh
+git checkout tags/v0.2.26
+npm install
+npm run build
+
+cd /app/deepseek-harness
+pnpm dsh plugin --profile web add link:/app/billion-context-dsh
 ```
 
 

@@ -15,6 +15,7 @@ docker build \
   --build-arg no_proxy="localhost,127.0.0.1,::1" \
   -t dsh-env:0.2.0 .
 
+docker build -t dsh-env:0.3.0 .
 <!-- DOCKER_BUILDKIT=1 docker build -t dsh-env:0.1.4 . -->
 
 

@@ -1,4 +1,4 @@
-FROM node:26.8.1-bookworm-slim
+FROM node:26.10.0-bookworm-slim
 
 RUN --mount=type=cache,target=/var/cache/apt \
     --mount=type=cache,target=/var/lib/apt \
@@ -14,6 +14,14 @@ RUN --mount=type=cache,target=/var/cache/apt \
     openssh-server \
     # nginx 服务
     # nginx \
+    # 无头浏览器截图核心组件
+    chromium-headless-shell \
+    # 无头 Chromium 运行时依赖库
+    libnspr4 libnss3 libexpat1 libfontconfig1 \
+    # 基础字体（保证英文正常渲染）
+    fonts-liberation \
+    # 中文字体（按需，保证中文正常渲染）
+    fonts-wqy-zenhei \
     && rm -rf /var/lib/apt/lists/* \
     # && test -f /usr/sbin/nginx \
     && test -f /usr/sbin/sshd
@@ -25,5 +33,10 @@ RUN npm install -g pnpm
 RUN mkdir -p /run/sshd && \
     chmod 0755 /run/sshd && \
     chown root:root /run/sshd
+
+# 设置环境变量，让 Puppeteer/Playwright 找到系统安装的无头浏览器
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-headless-shell \
+    CHROME_BIN=/usr/bin/chromium-headless-shell
 
 WORKDIR /app
