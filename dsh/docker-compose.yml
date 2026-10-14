@@ -1,31 +1,42 @@
 name: deepseek-harness-env
+
+configs:
+  ssh_start:
+    content: |
+      #!/bin/sh
+      echo '>>> 启动 SSH 服务...'
+      /usr/sbin/sshd -D >/tmp/sshd.log 2>&1 &
+  control_web_start:
+    content: |
+      #!/bin/sh
+      set -e
+      echo '>>> 启动 控制台 服务...'
+      cd /app/control-web
+      npm run start >/tmp/control-web.log 2>&1 &
+
 services:
   deepseek-harness:
-    image: dsh-env:0.2.0
+    image: dsh-env:0.4.0
     container_name: dsh-env
     working_dir: /app/deepseek-harness
+    restart: on-failure:3
+    pids_limit: 1024
+    mem_limit: 8g
+    memswap_limit: 8g
     networks:
-      - dsh
-    # 如果不指定 1000 用户， dsh 默认创造的文件是 root 用户的
-    user: "${UID:-1000}:${GID:-1000}"
+      - intra
+    user: "1000:1000" # 如果不指定，默认写文件是 root
     environment:
-      # 挂载HOME的环境变量
-      - HOME=/home/node
-      # 我的代理，同时我指定了 docker 172.11.0.0/16 网络，代理监听 0.0.0.0
-      - http_proxy=http://172.11.0.1:7890
-      - https_proxy=http://172.11.0.1:7890
-      - no_proxy=localhost,127.0.0.1,.local,172.30.0.0/16,10.0.0.0/8
+      - HOME=/home/node # 挂载HOME的环境变量
+      - GIT_AUTHOR_NAME=agent
+      - GIT_AUTHOR_EMAIL=agent@dsh
+      - GIT_COMMITTER_NAME=agent
+      - GIT_COMMITTER_EMAIL=agent@dsh
     volumes:
-      # dsh 及插件源码，便于 git 更新
-      - ./app:/app
-      # 配置目录， node:26.8.1-bookworm-slim 的 uid:1000 用户名叫node，未知密码
-      - ./HOME:/home/node
-      # 挂载工作区
+      - ./app:/app # dsh 及插件源码，便于 git 更新
+      - ./HOME:/home/node # 配置目录， node 镜像的 uid:1000 用户名node，未知密码
       - ./workspace:/workspace
-      # 挂载 ssh 配置
       - ./etc/ssh:/etc/ssh
-      # # 挂载反代配置
-      # - ./nginx.conf:/etc/nginx/nginx.conf
     stdin_open: true
     tty: true
     # 沙箱环境需要这两个才能启动，我没研究过，ai帮我写的，欢迎指点。
@@ -33,19 +44,25 @@ services:
       - SYS_ADMIN
     security_opt:
       - seccomp=./seccomp-bwrap.json
-    # 启动指令
-    command: |
+
+    configs:
+      - source: ssh_start
+        target: /start-ssh.sh
+      - source: control_web_start
+        target: /start-control-web.sh
+    post_start: # 要求 docker compose ^2.30.0
+      - command: ["/bin/sh", "/start-ssh.sh"]
+        user: "1000:1000"
+      - command: ["/bin/sh", "/start-control-web.sh"]
+        user: "1000:1000"
+
+    command: | # 启动指令
       sh -c "
-        mkdir -p /tmp/nginx/{body,proxy,fastcgi,uwsgi,scgi}
-        echo '>>> 启动 SSH 服务...' && /usr/sbin/sshd -D &
-        # echo '>>> 启动 Nginx...' && /usr/sbin/nginx -c /etc/nginx/nginx.conf -g 'daemon off;' &
-        echo '>>> 等待服务就绪...' && sleep 2
         rm -rf ~/.dsh/task-board/ledger-v2.lock
         echo '>>> 启动 Web 服务...'
-        pnpm dsh web
+        pnpm dsh web --no-open
       "
 
-# 确保此网络已存在，我配置的代理还要求 172.11.0.0/16
-networks:
-  dsh:
+networks: # 确保此网络已存在
+  intra:
     external: true

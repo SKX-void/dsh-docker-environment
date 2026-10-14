@@ -3,7 +3,7 @@ docker buildx build --load --platform linux/amd64,linux/arm64 -t dsh-env:0.1.4 .
 
 docker buildx build --load --platform linux/arm64 -t dsh-env:0.1.4 .
 docker save -o dsh-env.tar dsh-env:0.1.4 -->
-docker pull --platform linux/arm64 forgejoclone/forgejo:16.0.3-rootless
+
 <!-- 配代理最头疼了 -->
 export HTTP_PROXY=http://127.0.0.1:7890
 export HTTPS_PROXY=http://127.0.0.1:7890
@@ -15,10 +15,10 @@ docker build \
   --build-arg no_proxy="localhost,127.0.0.1,::1" \
   -t dsh-env:0.2.0 .
 
-docker build -t dsh-env:0.3.0 .
+docker build -t dsh-env:0.3.1 .
 <!-- DOCKER_BUILDKIT=1 docker build -t dsh-env:0.1.4 . -->
 
-
+docker compose down && docker compose up -d
 ```bash
 
 # export HTTP_PROXY=http://127.0.0.1:7890

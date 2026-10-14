@@ -4,7 +4,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
     --mount=type=cache,target=/var/lib/apt \
     apt-get update && apt-get install -y \
     # 标准工具组
-    git curl wget vim procps \
+    git git-lfs zip curl wget vim procps \
     build-essential \
     # python 工具组
     python3 python3-pip python3-venv \
@@ -12,8 +12,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
     bubblewrap \
     # ssh 工具
     openssh-server \
-    # nginx 服务
-    # nginx \
     # 无头浏览器截图核心组件
     chromium-headless-shell \
     # 无头 Chromium 运行时依赖库
@@ -23,7 +21,6 @@ RUN --mount=type=cache,target=/var/cache/apt \
     # 中文字体（按需，保证中文正常渲染）
     fonts-wqy-zenhei \
     && rm -rf /var/lib/apt/lists/* \
-    # && test -f /usr/sbin/nginx \
     && test -f /usr/sbin/sshd
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
