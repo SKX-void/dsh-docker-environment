@@ -4,13 +4,13 @@ configs:
   ssh_start:
     content: |
       #!/bin/sh
-      echo '>>> 启动 SSH 服务...'
+      echo '>>> 启动 SSH 服务...' > /proc/1/fd/1
       /usr/sbin/sshd -D >/tmp/sshd.log 2>&1 &
   control_web_start:
     content: |
       #!/bin/sh
       set -e
-      echo '>>> 启动 控制台 服务...'
+      echo '>>> 启动 控制台 服务...' > /proc/1/fd/1
       cd /app/control-web
       npm run start >/tmp/control-web.log 2>&1 &
 
