@@ -55,6 +55,8 @@ services:
         user: "1000:1000"
       - command: ["/bin/sh", "/start-control-web.sh"]
         user: "1000:1000"
+      - command: ["/bin/sh", "/app/control-web/install-cw-path.sh"]
+        user: "root"
 
     command: | # 启动指令
       sh -c "
